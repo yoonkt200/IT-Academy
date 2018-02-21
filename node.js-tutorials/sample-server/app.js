@@ -19,8 +19,8 @@ app.post('/user', function (req, res) {
 
 app.get('/user/search', function (req, res) {
     var user = {
-        userId: req.query.name,
-        name: 'John',
+        userId: req.query.id,
+        name: req.query.name,
         email: 'yohany_AT_gmail.com',
         company: 'KossLAB'
     };
