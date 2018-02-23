@@ -1,65 +1,53 @@
 var express = require('express');
 var app = express();
-var bodyParser = require('body-parser');
+var cors = require('cors');
+var mongoose = require('mongoose');
+var bijective = require('./bijective.js');
+var Urls = require('./models');
 
-// [configure body parser]
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+mongoose.connect('mongodb://localhost/url-shortener');
 
-// [router]
-app.get('/', function (req, res) {
-    res.send('Hello World!')
-}); // default page
+app.use(cors());
+app.use(express.static('public'));
 
-app.get('/user/:userId', function(req, res){
-    var User = mongoose.model('User', userSchema)
-    var query = User.find({id: req.params.userId}, 'id password name');
-    query.exec(function (err, docs) {
-        res.send(docs);
-        return;
+app.get('/url/:longUrl', function(req, res){
+
+    var shortUrl = '';
+
+    Urls.findOne({url: req.params.longUrl}, function (err, doc){
+        if (doc){
+            res.send({'key': bijective.encode(doc._id)});
+        } else {
+
+            var newUrl = Urls({
+                url: req.params.longUrl
+            });
+
+            newUrl.save(function(err) {
+                if (err) console.log(err);
+                res.send({'success': 1, 'key': bijective.encode(newUrl._id)});
+            });
+        }
+
     });
+
 });
 
-app.post('/user', function (req, res) {
-    const user = new User(
-        { id: req.body.id, password: req.body.password, name: req.body.name }
-    );
-    user.save();
-    res.send('user created');
-}); // create user
+app.get('/:key', function(req, res){
 
-app.put('/user/:userId', function (req, res) {
-    res.send('PUT (Update) ');
-}); // edit user
+    var id = bijective.decode(req.params.key);
 
-app.delete('/user/', function (req, res) {
-    var User = mongoose.model('User', userSchema)
-    User.deleteOne({id: req.body.id}, function (err, docs) {
-        res.send(docs);
-        return;
+    Urls.findOne({_id: id}, function (err, doc){
+        if (doc) {
+            res.redirect(doc.url);
+        } else {
+            res.redirect("/");
+        }
     });
-}); // delete user
+
+});
 
 
-// [run server]
 app.listen(3000, function () {
     console.log('Example app listening on port 3000!')
 });
-
-// [connect db]
-const mongoose = require('mongoose');
-
-var db = mongoose.connection;
-db.on('error', console.error);
-db.once('open', function(){
-    console.log("Connected to mongod server");
-});
-
-mongoose.connect('mongodb://localhost/test');
-
-// [models]
-var userSchema = mongoose.Schema({
-    id: String, password: String, name:String
-});
-
-var User = mongoose.model('User', userSchema);

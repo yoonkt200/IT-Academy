@@ -30,17 +30,18 @@
             , dataType: "json"
             , type: 'GET'
             , data: {}
-            , success: success
-            , error: function(jqXHR, textStatus, errorThrown){
-                alert(errorThrown);
+            , success: function (data) {
+                if(data.success == 1){
+                    $('#shortUrl').text(API_SERVER +'/' +data.key);
+                }
+            }
+            , error: function(request,status,error){
+                console.log("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+                alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
             }
         });
 
     });
-
-    var success = function(data){
-        $('#shortUrl').text(API_SERVER +'/' +data.key);
-    };
 </script>
 </body>
 </html>
