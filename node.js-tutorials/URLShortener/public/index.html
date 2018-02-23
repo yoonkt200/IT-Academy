@@ -2,22 +2,82 @@
 <head>
     <title>URL Shortener</title>
     <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 </head>
 <body>
 <br><br>
 
-<form id="createUrl" role="form">
-    <input type="url" id="longUrl">
-    <button type="submit">Shorten !</button>
+<form id="createUrl" role="form" class="navbar navbar-default container-fluid">
+    <div class="navbar-brand navbar-header">URL Shortener</div>
+    <input type="url" id="longUrl" class="form-control navbar-form navbar-left" placeholder="URL">
+    <button type="submit" class="form-control navbar-form btn btn-primary">Shorten !</button>
 </form>
 
 <br><br>
 
-<h2><strong id="shortUrl"></strong></h2>
+<table id="myTableData" class="table table-striped">
+    <tr>
+        <td><b>#</b></td>
+        <td><b>Original URL</b></td>
+        <td><b>Short URL</b></td>
+        <td><b>Created At</b></td>
+    </tr>
+</table>
 
 <script type="text/javascript">
     var API_SERVER = 'http://localhost:3000';
+    var SUCCESS = 1;
+    var ALREADY_HAS = 2;
 
+    // 디폴트 페이지에서 데이터 가져오기
+    $.ajax({
+        url: API_SERVER + '/api/getList'
+        , crossDomain: true
+        , dataType: "json"
+        , type: 'GET'
+        , data: {}
+        , success: function (data) {
+            for (i = 0; i < data.length; i++) {
+                addRow(data[i].url, encode(data[i]._id), data[i]._id, data[i].created_at);
+            }
+        }
+        , error: function(request,status,error){
+            console.log("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+            alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+        }
+    });
+
+    // 한 줄 추가하는 함수
+    function addRow(originalUrl, shortUrl, id, date) {
+
+        var table = document.getElementById("myTableData");
+
+        var rowCount = table.rows.length;
+        var row = table.insertRow(rowCount);
+        row.insertCell(0).innerHTML= id;
+        row.insertCell(1).innerHTML= "<a href='" + originalUrl + "'>" + originalUrl + "</a>";
+        row.insertCell(2).innerHTML= "<a href='" + API_SERVER + '/' + shortUrl + "'>" + API_SERVER + '/' + shortUrl + "</a>";
+        row.insertCell(3).innerHTML= date;
+
+    }
+
+    // encoding
+    var alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    var base = alphabet.length;
+
+    function encode(num){
+        var encoded = '';
+        if(num==0) return alphabet[num];
+        while (num){
+            var remainder = num % base;
+            num = Math.floor(num / base);
+            encoded = alphabet[remainder].toString() + encoded;
+        }
+        return encoded;
+    }
+
+    // Shortener 버튼 클릭시
     $( "#createUrl" ).submit(function( event ) {
 
         event.preventDefault();
@@ -31,8 +91,11 @@
             , type: 'GET'
             , data: {}
             , success: function (data) {
-                if(data.success == 1){
-                    $('#shortUrl').text(API_SERVER +'/' +data.key);
+                if(data.success == SUCCESS){
+                    addRow(data.originalURL, data.shortURL, data._id, data.created)
+                }
+                else if(data.success == ALREADY_HAS){
+                    alert("이미 등록된 URL 주소입니다.");
                 }
             }
             , error: function(request,status,error){
