@@ -55,14 +55,13 @@
     function addRow(originalUrl, shortUrl, id, date) {
 
         var table = document.getElementById("myTableData");
-
         var rowCount = table.rows.length;
         var row = table.insertRow(rowCount);
         row.insertCell(0).innerHTML= id;
         row.insertCell(1).innerHTML= "<a href='" + originalUrl + "'>" + originalUrl + "</a>";
         row.insertCell(2).innerHTML= "<a href='" + API_SERVER + '/' + shortUrl + "'>" + API_SERVER + '/' + shortUrl + "</a>";
         row.insertCell(3).innerHTML= date;
-        row.insertCell(4).innerHTML= "<a class='btn btn-default'>Delete</a>";
+        row.insertCell(4).innerHTML= "<a class='btn btn-default' onclick='func_delete(" + _id + ")'>Delete</a>";
 
     }
 
